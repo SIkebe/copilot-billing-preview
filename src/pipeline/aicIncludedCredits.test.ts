@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS,
   BUSINESS_MONTHLY_QUOTA,
+  BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS,
   calculateAicIncludedCreditsPool,
   calculateLicenseSummary,
   ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS,
   ENTERPRISE_MONTHLY_QUOTA,
+  ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS,
   getAicIncludedCreditTier,
   getIndividualPlanTier,
   getIndividualMonthlyAicIncludedCredits,
@@ -145,6 +147,11 @@ describe('AIC included credit tiering and pool sizing', () => {
     expect(getMonthlyAicIncludedCredits(ENTERPRISE_MONTHLY_QUOTA)).toBe(ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS)
   })
 
+  it('returns standard included credits when promotional amounts are excluded', () => {
+    expect(getMonthlyAicIncludedCredits(BUSINESS_MONTHLY_QUOTA, 'organization', 'standard')).toBe(BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS)
+    expect(getMonthlyAicIncludedCredits(ENTERPRISE_MONTHLY_QUOTA, 'organization', 'standard')).toBe(ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS)
+  })
+
   it('does not apply organization pooled credits in individual scope', () => {
     expect(getMonthlyAicIncludedCredits(PRO_MONTHLY_QUOTA, 'individual')).toBe(0)
     expect(getMonthlyAicIncludedCredits(PRO_PLUS_MONTHLY_QUOTA, 'individual')).toBe(0)
@@ -220,6 +227,17 @@ describe('AIC included credit tiering and pool sizing', () => {
 
     await expect(calculateAicIncludedCreditsPool(file, { business: 2, enterprise: 1 })).resolves.toBe(
       (2 * BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS) + ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS,
+    )
+  })
+
+  it('uses standard organization included credits when promotional amounts are excluded', async () => {
+    const file = createCsv([
+      ['2026-03-01', 'mona', 'copilot', 'copilot_ai_credit', 'GPT-5', '10', 'ai-credits', '0.01', '0.10', '0', '0.10', 'False', '300', 'example-org', 'Cost Center A', '10', '0.10'],
+      ['2026-03-01', 'hubot', 'copilot', 'copilot_ai_credit', 'GPT-5', '10', 'ai-credits', '0.01', '0.10', '0', '0.10', 'False', '1000', 'example-org', 'Cost Center A', '10', '0.10'],
+    ])
+
+    await expect(calculateAicIncludedCreditsPool(file, { includedCreditsMode: 'standard' })).resolves.toBe(
+      BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS + ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS,
     )
   })
 
@@ -526,6 +544,21 @@ describe('pooled AIC allocation and derived AIC discounts', () => {
     expect(records).toHaveLength(2)
     expect(records[0].aic_net_amount).toBe(0)
     expect(records[1].aic_net_amount).toBeCloseTo(10)
+  })
+
+  it('applies standard organization included credits when promotional amounts are excluded in runPipeline', async () => {
+    const file = createCsv([
+      ['2026-03-01', 'mona', 'copilot', 'copilot_ai_credit', 'GPT-5', '3500', 'ai-credits', '0.01', '35.00', '0', '35.00', 'False', '300', 'octo', 'Cats', '3500', '35.00'],
+      ['2026-03-02', 'hubot', 'copilot', 'copilot_ai_credit', 'GPT-5', '7000', 'ai-credits', '0.01', '70.00', '0', '70.00', 'False', '1000', 'octo', 'Cats', '7000', '70.00'],
+    ])
+    const aggregator = new CaptureAggregator()
+
+    await runPipeline(file, [aggregator], { includedCreditsOverrides: { includedCreditsMode: 'standard' } })
+
+    const records = aggregator.result()
+    expect(records).toHaveLength(2)
+    expect(records[0].aic_net_amount).toBe(0)
+    expect(records[1].aic_net_amount).toBeCloseTo(47)
   })
 })
 

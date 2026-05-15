@@ -12,14 +12,21 @@ export const ENTERPRISE_MONTHLY_QUOTA = 1000
 export const PRO_MONTHLY_QUOTA = 300
 export const PRO_PLUS_MONTHLY_QUOTA = 1500
 
-export const BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS = 3000
-export const ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS = 7000
+export const BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS = 1900
+export const ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS = 3900
+export const BUSINESS_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS = 3000
+export const ENTERPRISE_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS = 7000
+export const BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS = BUSINESS_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS
+export const ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS = ENTERPRISE_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS
 export const PRO_MONTHLY_AIC_INCLUDED_CREDITS = 1500
 export const PRO_PLUS_MONTHLY_AIC_INCLUDED_CREDITS = 7000
+
+export type AicIncludedCreditsMode = 'promotional' | 'standard'
 
 export type AicIncludedCreditsOverrides = {
   business?: number
   enterprise?: number
+  includedCreditsMode?: AicIncludedCreditsMode
 }
 
 export type ReportPlanScope = 'individual' | 'organization'
@@ -58,15 +65,28 @@ function normalizeSeatCount(value: number | undefined): number | null {
   return Math.max(0, Math.floor(value))
 }
 
+function getBusinessMonthlyAicIncludedCredits(mode: AicIncludedCreditsMode = 'promotional'): number {
+  return mode === 'standard'
+    ? BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS
+    : BUSINESS_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS
+}
+
+function getEnterpriseMonthlyAicIncludedCredits(mode: AicIncludedCreditsMode = 'promotional'): number {
+  return mode === 'standard'
+    ? ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS
+    : ENTERPRISE_PROMOTIONAL_MONTHLY_AIC_INCLUDED_CREDITS
+}
+
 function calculateOrganizationIncludedCreditsPool(overrides: AicIncludedCreditsOverrides): number | null {
   const businessSeats = normalizeSeatCount(overrides.business)
   const enterpriseSeats = normalizeSeatCount(overrides.enterprise)
+  const mode = overrides.includedCreditsMode ?? 'promotional'
 
   if (businessSeats === null && enterpriseSeats === null) return null
 
   return (
-    (businessSeats ?? 0) * BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS
-    + (enterpriseSeats ?? 0) * ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS
+    (businessSeats ?? 0) * getBusinessMonthlyAicIncludedCredits(mode)
+    + (enterpriseSeats ?? 0) * getEnterpriseMonthlyAicIncludedCredits(mode)
   )
 }
 
@@ -110,10 +130,11 @@ export function getIndividualPlanTier(
 export function getMonthlyAicIncludedCredits(
   totalMonthlyQuota: number,
   reportPlanScope: ReportPlanScope = 'organization',
+  mode: AicIncludedCreditsMode = 'promotional',
 ): number {
   const tier = getAicIncludedCreditTier(totalMonthlyQuota, reportPlanScope)
-  if (tier === 'enterprise') return ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS
-  if (tier === 'business') return BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS
+  if (tier === 'enterprise') return getEnterpriseMonthlyAicIncludedCredits(mode)
+  if (tier === 'business') return getBusinessMonthlyAicIncludedCredits(mode)
   return 0
 }
 
@@ -216,11 +237,12 @@ export async function calculateAicIncludedCreditsContext(
   }
 
   const overriddenOrganizationIncludedCreditPool = calculateOrganizationIncludedCreditsPool(overrides)
+  const includedCreditsMode = overrides.includedCreditsMode ?? 'promotional'
 
   return {
     reportPlanScope,
     organizationIncludedCreditsPool: overriddenOrganizationIncludedCreditPool ?? Array.from(quotasByUser.values()).reduce(
-      (total, quota) => total + getMonthlyAicIncludedCredits(quota, reportPlanScope),
+      (total, quota) => total + getMonthlyAicIncludedCredits(quota, reportPlanScope, includedCreditsMode),
       0,
     ),
     individualMonthlyIncludedCredits: 0,
