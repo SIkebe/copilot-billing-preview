@@ -4,7 +4,9 @@ import type { UserUsage } from '../pipeline/aggregators/userUsageAggregator'
 import {
   type AicIncludedCreditsOverrides,
   BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS,
+  BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS,
   ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS,
+  ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS,
   calculateLicenseSummary,
   inferReportPlanScope,
 } from '../pipeline/aicIncludedCredits'
@@ -44,11 +46,12 @@ function getSortValue(user: UserUsage, key: SortKey): number | string {
 export interface UsersViewProps {
   users: UserUsage[]
   seatOverrides?: SeatOverrides
+  includePromotionalCredits?: boolean
   onSeatOverridesChange?: (overrides: SeatOverrides) => void
   onSelectUser?: (username: string) => void
 }
 
-export function UsersView({ users, seatOverrides = {}, onSeatOverridesChange, onSelectUser }: UsersViewProps) {
+export function UsersView({ users, seatOverrides = {}, includePromotionalCredits = true, onSeatOverridesChange, onSelectUser }: UsersViewProps) {
   const [query, setQuery] = useState('')
   const [pageAnchor, setPageAnchor] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('aicQuantity')
@@ -76,8 +79,14 @@ export function UsersView({ users, seatOverrides = {}, onSeatOverridesChange, on
 
   const adjustedSummary = useMemo(() => {
     if (reportPlanScope === 'individual') return licenseSummary
-    const bAic = displayBusiness * BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS
-    const eAic = displayEnterprise * ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS
+    const businessIncludedCredits = includePromotionalCredits
+      ? BUSINESS_MONTHLY_AIC_INCLUDED_CREDITS
+      : BUSINESS_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS
+    const enterpriseIncludedCredits = includePromotionalCredits
+      ? ENTERPRISE_MONTHLY_AIC_INCLUDED_CREDITS
+      : ENTERPRISE_STANDARD_MONTHLY_AIC_INCLUDED_CREDITS
+    const bAic = displayBusiness * businessIncludedCredits
+    const eAic = displayEnterprise * enterpriseIncludedCredits
     return {
       rows: [
         { label: 'Copilot Business', users: displayBusiness, includedAic: bAic },
@@ -86,7 +95,7 @@ export function UsersView({ users, seatOverrides = {}, onSeatOverridesChange, on
       totalUsers: displayBusiness + displayEnterprise,
       totalIncludedAic: bAic + eAic,
     }
-  }, [licenseSummary, displayBusiness, displayEnterprise, reportPlanScope])
+  }, [licenseSummary, displayBusiness, displayEnterprise, includePromotionalCredits, reportPlanScope])
 
   const handleEdit = () => {
     setDraftBusiness(String(savedBusiness))
@@ -273,7 +282,12 @@ export function UsersView({ users, seatOverrides = {}, onSeatOverridesChange, on
             <br />
             You can <strong>add</strong> missing Copilot Business and Copilot Enterprise licenses (but not remove or reduce historical numbers in this report) for accurate bill estimation.
           </p>
-          {displayBusiness > 0 && (
+          {!includePromotionalCredits && reportPlanScope === 'organization' && (
+            <p>
+              Promotional AI Credits are excluded from the current report totals. Standard included AI Credits are still applied: 1,900 for Copilot Business and 3,900 for Copilot Enterprise.
+            </p>
+          )}
+          {includePromotionalCredits && displayBusiness > 0 && (
             <p>
               Upgrading Copilot Business users to Copilot Enterprise during the promotional period reduces the additional usage cost by <strong>$20</strong> per upgrade.
             </p>

@@ -19,6 +19,7 @@ type OverviewViewProps = {
     enterprise: number
   }
   reportPlanScope?: ReportPlanScope
+  includePromotionalCredits?: boolean
   upgradeRecommendation?: IndividualPlanUpgradeRecommendation | null
 }
 
@@ -44,6 +45,7 @@ export function OverviewView({
   licenseAmount,
   licenseSeatCounts,
   reportPlanScope = 'organization',
+  includePromotionalCredits = true,
   upgradeRecommendation = null,
 }: OverviewViewProps) {
   const filledDailyUsageData = fillDataForRange(dailyUsageData, rangeStart, rangeEnd, createEmptyDailyUsage)
@@ -136,7 +138,7 @@ export function OverviewView({
             licenseAmount={licenseAmount}
             licenseSeatCounts={licenseSeatCounts}
             showNegotiatedDiscountDisclaimer={reportPlanScope !== 'individual'}
-            showPromotionalDataDisclaimer={reportPlanScope === 'individual'}
+            showPromotionalDataDisclaimer={reportPlanScope === 'individual' || (reportPlanScope === 'organization' && includePromotionalCredits)}
             upgradeRecommendation={upgradeRecommendation}
             className="mb-3"
           />

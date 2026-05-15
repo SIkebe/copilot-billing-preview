@@ -13,8 +13,8 @@ export function PromotionalDataDisclaimer({
     ? appLinks.promotionalAmountsDocs
     : appLinks.flexAllotmentDocs
   const message = scope === 'organization'
-    ? 'Promotional amounts are used in this simulation.'
-    : 'Flex allotment is used in this simulation.'
+    ? 'Promotional amounts are included in this estimate.'
+    : 'Flex allotment is included in this estimate.'
   const linkText = scope === 'organization'
     ? 'Learn more about promotional amounts.'
     : 'Learn more about flex allotment.'
