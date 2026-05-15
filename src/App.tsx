@@ -60,6 +60,7 @@ function App() {
   const [progress, setProgress] = useState(0)
   const [rowsProcessed, setRowsProcessed] = useState(0)
   const [seatOverrides, setSeatOverrides] = useState<SeatOverrides>({})
+  const [includePromotionalCredits, setIncludePromotionalCredits] = useState(true)
   const [budgetValues, setBudgetValues] = useState<BudgetValues>(EMPTY_BUDGET_VALUES)
   const [budgetSimulation, setBudgetSimulation] = useState<BudgetSimulationResult | null>(null)
   const [budgetSimulationError, setBudgetSimulationError] = useState<string | null>(null)
@@ -182,6 +183,7 @@ function App() {
     setProgress(0)
     setRowsProcessed(0)
     setSeatOverrides({})
+    setIncludePromotionalCredits(true)
     setBudgetValues(EMPTY_BUDGET_VALUES)
     setBudgetSimulation(null)
     setBudgetSimulationError(null)
@@ -251,6 +253,13 @@ function App() {
     return compactOverrides
   }, [getDefaultSeatCounts])
 
+  const getBillingModeIncludedCreditOverrides = useCallback((overrides: AicIncludedCreditsOverrides): AicIncludedCreditsOverrides => {
+    return {
+      ...overrides,
+      includedCreditsMode: includePromotionalCredits ? 'promotional' : 'standard',
+    }
+  }, [includePromotionalCredits])
+
   const handleBudgetValueChange = useCallback((field: BudgetField, value: string) => {
     latestSimulationIdRef.current += 1
     setBudgetValues((current) => ({
@@ -275,7 +284,7 @@ function App() {
     setIsApplyingBudgetSimulation(false)
 
     try {
-      const nextData = await buildReportData(file, resolvedOverrides)
+      const nextData = await buildReportData(file, getBillingModeIncludedCreditOverrides(resolvedOverrides))
       if (runId !== latestRunIdRef.current) return
 
       applyProcessedData(nextData)
@@ -284,7 +293,41 @@ function App() {
       if (runId !== latestRunIdRef.current) return
       setError(err instanceof Error ? err.message : 'Failed to recalculate usage-based billing.')
     }
-  }, [applyProcessedData, buildReportData, compactSeatOverrides, resolveIncludedCreditOverrides])
+  }, [applyProcessedData, buildReportData, compactSeatOverrides, getBillingModeIncludedCreditOverrides, resolveIncludedCreditOverrides])
+
+  const handlePromotionalCreditsChange = useCallback(async (nextIncludePromotionalCredits: boolean) => {
+    const file = currentFileRef.current
+    const previousIncludePromotionalCredits = includePromotionalCredits
+    setIncludePromotionalCredits(nextIncludePromotionalCredits)
+    latestSimulationIdRef.current += 1
+    setBudgetSimulation(null)
+    setBudgetSimulationError(null)
+    setIsApplyingBudgetSimulation(false)
+
+    if (!file) return
+
+    const runId = ++latestRunIdRef.current
+    const resolvedOverrides = resolveIncludedCreditOverrides(seatOverrides)
+    setError(null)
+
+    try {
+      const nextData = await buildReportData(
+        file,
+        {
+          ...resolvedOverrides,
+          includedCreditsMode: nextIncludePromotionalCredits ? 'promotional' : 'standard',
+        },
+      )
+      if (runId !== latestRunIdRef.current) return
+
+      applyProcessedData(nextData)
+      setSeatOverrides(compactSeatOverrides(resolvedOverrides))
+    } catch (err) {
+      if (runId !== latestRunIdRef.current) return
+      setIncludePromotionalCredits(previousIncludePromotionalCredits)
+      setError(err instanceof Error ? err.message : 'Failed to recalculate usage-based billing.')
+    }
+  }, [applyProcessedData, buildReportData, compactSeatOverrides, includePromotionalCredits, resolveIncludedCreditOverrides, seatOverrides])
 
   const handleApplyBudgetSimulation = useCallback(async () => {
     const file = currentFileRef.current
@@ -341,7 +384,7 @@ function App() {
             [PRODUCT_BUDGET_COPILOT]: parsedProductCopilotBudget,
           },
         },
-        resolveIncludedCreditOverrides(seatOverrides),
+        getBillingModeIncludedCreditOverrides(resolveIncludedCreditOverrides(seatOverrides)),
       )
 
       if (simulationId !== latestSimulationIdRef.current) return
@@ -361,6 +404,7 @@ function App() {
     budgetValues.productCopilot,
     budgetValues.productSpark,
     budgetValues.user,
+    getBillingModeIncludedCreditOverrides,
     resolveIncludedCreditOverrides,
     seatOverrides,
     userUsage,
@@ -539,6 +583,27 @@ function App() {
                 </>
               )}
             </div>
+            {reportPlanScope === 'organization' && (
+              <div className="flex items-center gap-2 text-[13px] text-fg-muted">
+                <span className={`w-[72px] text-right font-semibold whitespace-nowrap ${includePromotionalCredits ? 'text-fg-muted' : 'text-fg-default'}`}>Standard</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={includePromotionalCredits}
+                  aria-label="Toggle between standard and promotional included AI credits"
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border-default transition-colors focus-visible:outline-2 focus-visible:outline-app-accent focus-visible:outline-offset-2 ${includePromotionalCredits ? 'bg-bg-success-emphasis' : 'bg-bg-muted'}`}
+                  onClick={() => {
+                    void handlePromotionalCreditsChange(!includePromotionalCredits)
+                  }}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full bg-bg-default shadow-sm transition-transform ${includePromotionalCredits ? 'translate-x-5' : 'translate-x-0.5'}`}
+                    aria-hidden="true"
+                  />
+                </button>
+                <span className={`w-[92px] font-semibold whitespace-nowrap ${includePromotionalCredits ? 'text-fg-default' : 'text-fg-muted'}`}>Promotional</span>
+              </div>
+            )}
           </nav>
 
           <div className="flex flex-1 min-h-0">
@@ -647,6 +712,7 @@ function App() {
                 licenseAmount={licenseAmount}
                 licenseSeatCounts={licenseSeatCounts}
                 reportPlanScope={reportPlanScope}
+                includePromotionalCredits={includePromotionalCredits}
                 upgradeRecommendation={individualUpgradeRecommendation}
               />
             ) : activeView === 'models' ? (
@@ -665,6 +731,7 @@ function App() {
                   <UsersView
                     users={reportUsers}
                     seatOverrides={seatOverrides}
+                    includePromotionalCredits={includePromotionalCredits}
                     onSeatOverridesChange={(overrides) => {
                       void handleSeatOverridesChange(overrides)
                     }}
@@ -708,6 +775,7 @@ function App() {
                     currentAicQuantity={overviewTotals.aicQuantity}
                     licenseAmount={licenseAmount}
                     licenseSeatCounts={licenseSeatCounts}
+                    includePromotionalCredits={includePromotionalCredits}
                     upgradeRecommendation={individualUpgradeRecommendation}
                     dailyUsageData={dailyUsageData}
                     budgetSimulation={budgetSimulation}

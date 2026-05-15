@@ -11,7 +11,7 @@ This project is in active development. It is intended to help GitHub Copilot cus
 - Parse GitHub Copilot usage billing CSV reports in the browser
 - Compare request-based and usage-based billing signals
 - Explore usage and cost trends by user, organization, model, product, and cost center
-- Review AI Credit usage, included credits, and cost management views
+- Review AI Credit usage, included credits, promotional-credit assumptions, and cost management views
 
 ## Scope and limitations
 

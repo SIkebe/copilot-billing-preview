@@ -27,6 +27,7 @@ type CostManagementViewProps = {
     business: number
     enterprise: number
   }
+  includePromotionalCredits?: boolean
   upgradeRecommendation?: IndividualPlanUpgradeRecommendation | null
   dailyUsageData: DailyUsageData[]
   budgetSimulation: BudgetSimulationResult | null
@@ -122,6 +123,7 @@ export function CostManagementView({
   currentAicQuantity,
   licenseAmount,
   licenseSeatCounts,
+  includePromotionalCredits = true,
   upgradeRecommendation = null,
   dailyUsageData,
   budgetSimulation,
@@ -178,7 +180,7 @@ export function CostManagementView({
         licenseAmount={licenseAmount}
         licenseSeatCounts={licenseSeatCounts}
         showNegotiatedDiscountDisclaimer={!isIndividualReport}
-        showPromotionalDataDisclaimer={isIndividualReport}
+        showPromotionalDataDisclaimer={isIndividualReport || (!isIndividualReport && includePromotionalCredits)}
         upgradeRecommendation={upgradeRecommendation}
       />
 
@@ -213,7 +215,7 @@ export function CostManagementView({
           <div className="flex flex-col gap-1">
             <strong className="text-sm font-semibold text-fg-default">Product-level budgets</strong>
             <p className="m-0 text-[13px] text-fg-muted">
-              These budgets apply only to <strong className="text-fg-default">AIC additional spend</strong>. Included credits can still be used before additional spend blocking starts.
+              These budgets apply only to <strong className="text-fg-default">AIC additional spend</strong>. Included credits under the selected billing assumption can still be used before additional spend blocking starts.
             </p>
           </div>
 

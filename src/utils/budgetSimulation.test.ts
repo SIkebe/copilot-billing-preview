@@ -361,6 +361,24 @@ describe('simulateBudgetFromRecords', () => {
 })
 
 describe('runBudgetSimulation', () => {
+  it('uses standard organization included credits when promotional amounts are excluded', async () => {
+    const file = createCsv([
+      ['2026-06-01', 'mona', 'copilot', 'copilot_ai_credit', 'GPT-5', '2000', 'ai-credits', '0.01', '20.00', '0', '20.00', 'False', '300', 'example-org', 'Cost Center A', '2000', '20.00'],
+    ])
+
+    await expect(runBudgetSimulation(file, {}, { includedCreditsMode: 'standard' })).resolves.toEqual({
+      totalBill: 1,
+      blockedUsers: 0,
+      blockedRequests: 0,
+      blockedIncludedCreditsAic: 0,
+      budgetExhausted: false,
+      firstUserBlockedDate: null,
+      accountBlockedDate: null,
+      productBlockedDates: {},
+      adjustedDailyNetCostByDate: [{ date: '2026-06-01', amount: 1 }],
+    })
+  })
+
   it('normalizes known-window CSV rows before simulating budgets', async () => {
     const file = createCsv([
       ['2026-04-25', 'mona', 'copilot', 'copilot_premium_request', 'GPT-5', '10', 'requests', '0.04', '0.40', '0', '0.40', 'False', '0', '', '', '100', '1.00'],

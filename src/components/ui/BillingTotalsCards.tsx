@@ -42,6 +42,7 @@ export function BillingTotalsCards({
 }: BillingTotalsCardsProps) {
   const pruTotalAmount = pruNetAmount + (licenseAmount ?? 0)
   const aicTotalAmount = aicNetAmount + (licenseAmount ?? 0)
+  const promotionalDataScope = showNegotiatedDiscountDisclaimer ? 'organization' : 'individual'
 
   return (
     <div className={`flex flex-col gap-3 ${className}`.trim()}>
@@ -136,13 +137,8 @@ export function BillingTotalsCards({
                       <span>{formatUsd(aicTotalAmount)}</span>
                     </div>
                   )}
-                  {showNegotiatedDiscountDisclaimer && (
-                    <>
-                      <NegotiatedDiscountDisclaimer />
-                      <PromotionalDataDisclaimer scope="organization" />
-                    </>
-                  )}
-                  {showPromotionalDataDisclaimer && <PromotionalDataDisclaimer />}
+                  {showNegotiatedDiscountDisclaimer && <NegotiatedDiscountDisclaimer />}
+                  {showPromotionalDataDisclaimer && <PromotionalDataDisclaimer scope={promotionalDataScope} />}
                 </div>
               )}
             </div>
