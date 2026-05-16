@@ -604,7 +604,7 @@ function App() {
                   role="switch"
                   aria-checked={includePromotionalCredits}
                   aria-label="Toggle between standard and promotional included AI credits"
-                  className={`group relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border-default shadow-sm cursor-pointer transition-[background-color,border-color,box-shadow] hover:border-border-emphasis hover:shadow-md focus-visible:outline-2 focus-visible:outline-app-accent focus-visible:outline-offset-2 ${includePromotionalCredits ? 'bg-bg-success-emphasis' : 'bg-bg-default'}`}
+                  className={`group relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border-default shadow-sm cursor-pointer transition-[background-color,border-color,box-shadow] hover:border-border-emphasis hover:shadow-md focus-visible:outline-2 focus-visible:outline-app-accent focus-visible:outline-offset-2 ${includePromotionalCredits ? 'bg-bg-success-emphasis' : 'bg-bg-muted'}`}
                   onClick={() => {
                     void handlePromotionalCreditsChange(!includePromotionalCredits)
                   }}
