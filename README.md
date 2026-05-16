@@ -2,7 +2,7 @@
 
 A web application for previewing and comparing your future GitHub Copilot bills as you transition to the new usage-based billing model. Upload your CSV billing reports to explore requests, costs, AI Credits, and trends across users, organizations, models, and cost centers.
 
-Production instance: <https://copilot-billing-preview.github.com/>
+Production instance: <https://sikebe.github.io/copilot-billing-preview/>
 
 This project is in active development. It is intended to help GitHub Copilot customers understand usage-based billing preview data during the transition period.
 
