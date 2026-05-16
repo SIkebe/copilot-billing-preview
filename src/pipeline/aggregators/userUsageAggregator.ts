@@ -2,7 +2,6 @@ import type { Aggregator } from './base'
 import { getUsageMetrics, type TokenUsageHeader, type TokenUsageRecord } from '../parser'
 import { getDisplayModelName } from '../modelLabels'
 import { getFriendlyProductName } from '../productClassification'
-import { classifyUserSpendSegments, type UserSpendSegmentId } from '../../utils/userSpendSegments'
 
 export type UserModelDailyUsage = {
   requests: number
@@ -43,7 +42,6 @@ export type UserProductBreakdown = {
 
 export type UserUsage = {
   username: string
-  spendSegment: UserSpendSegmentId
   totalMonthlyQuota: number
   organizations: string[]
   costCenters: string[]
@@ -277,7 +275,6 @@ export class UserUsageAggregator implements Aggregator<TokenUsageRecord, UserUsa
 
         return {
           username: user.username,
-          spendSegment: 'near-zero',
           totalMonthlyQuota: user.totalMonthlyQuota,
           organizations: Array.from(user.organizations).sort((a, b) => a.localeCompare(b)),
           costCenters: Array.from(user.costCenters).sort((a, b) => a.localeCompare(b)),
@@ -289,11 +286,6 @@ export class UserUsageAggregator implements Aggregator<TokenUsageRecord, UserUsa
           },
         }
       })
-
-    const spendSegments = classifyUserSpendSegments(users)
-    users.forEach((user) => {
-      user.spendSegment = spendSegments.get(user.username) ?? 'near-zero'
-    })
 
     return { users }
   }

@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { BillingProjectionDisclaimer, NegotiatedDiscountDisclaimer } from '../components/ui'
-import { th, thNum, td, tdNum } from '../components/ui/tableStyles'
 import { appLinks } from '../config/links'
 import type { OrganizationResult, OrgTotals, OrgUserTotals } from '../pipeline/aggregators/organizationAggregator'
 import { calculateAicDiscountAmount, calculateSavingsDifference } from '../utils/billingComparison'
@@ -74,11 +73,8 @@ export function OrganizationsView({ data, rangeStart }: { data: OrganizationResu
 
   if (data.organizations.length === 0) {
     return (
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline gap-3 mb-4">
-          <h2 className="m-0 text-lg text-fg-default">Organizations</h2>
-          <span className="text-[13px] text-fg-muted">0 total</span>
-        </div>
+      <section className="flex flex-col gap-5">
+        <h2 className="m-0 text-2xl font-bold text-fg-default">Organizations</h2>
         <div className="bg-bg-default border border-border-default rounded-md p-6 text-center text-fg-muted text-sm">No organizations found in this report.</div>
       </section>
     )
@@ -90,13 +86,11 @@ export function OrganizationsView({ data, rangeStart }: { data: OrganizationResu
   const hasCosts = totals && (totals.grossAmount > 0 || totals.aicGrossAmount > 0)
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-3 mb-2">
-        <div className="flex items-baseline gap-3 mb-4">
-          <h2 className="m-0 text-lg text-fg-default">Organizations</h2>
-          <span className="text-[13px] text-fg-muted">
-            {data.organizations.length.toLocaleString()} total
-          </span>
+        <div className="flex items-baseline gap-3">
+          <h2 className="m-0 text-2xl font-bold text-fg-default">Organizations</h2>
+          <span className="text-sm font-medium text-fg-muted">{data.organizations.length.toLocaleString()} total</span>
         </div>
         <select className="border border-border-default rounded-md py-2.5 px-3 text-sm max-w-[500px] text-fg-default bg-bg-default focus-visible:outline-2 focus-visible:outline-app-accent focus-visible:outline-offset-2" value={selectedOrgName} onChange={handleSelectChange}>
           {selectOptions}
@@ -217,37 +211,35 @@ export function OrganizationsView({ data, rangeStart }: { data: OrganizationResu
           <div className="px-4 pt-3 text-[13px] text-fg-muted">
             Showing the top {MAX_DETAIL_ROWS} {activeTable === 'users' ? 'users' : 'models'} by AI Credits consumed for <strong>{selectedOrgName}</strong>.
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[13px]" key={`${selectedOrgName}-${activeTable}`}>
-              <thead>
-                <tr>
-                  <th className={th}>{activeTable === 'users' ? 'User' : 'Model'}</th>
-                  <th className={thNum}>PRUs</th>
-                  <th className={thNum}>PRU Cost</th>
-                  <th className={thNum}>AICs</th>
-                  <th className={thNum}>AIC Cost</th>
-                  <th className={thNum}>Difference</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(activeTable === 'users' ? userRows : modelRows).map((row) => {
-                  const diff = calculateSavingsDifference(row.totals.netAmount, row.totals.aicNetAmount)
-                  return (
-                    <tr key={row.label}>
-                      <td className={`${td} font-semibold text-fg-default`}>{row.label}</td>
-                      <td className={tdNum}>{row.totals.requests.toLocaleString()}</td>
-                      <td className={tdNum}>{formatUsd(row.totals.netAmount)}</td>
-                      <td className={tdNum}>{formatAic(row.totals.aicQuantity)}</td>
-                      <td className={tdNum}>{formatUsd(row.totals.aicNetAmount)}</td>
-                      <td className={`${tdNum}${diff > 0 ? ' text-app-savings-fg font-semibold' : diff < 0 ? ' text-fg-danger font-semibold' : ''}`}>
-                        {formatDifference(diff)}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <table className="w-full border-collapse text-[13px]" key={`${selectedOrgName}-${activeTable}`}>
+            <thead>
+              <tr>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-left text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default">{activeTable === 'users' ? 'User' : 'Model'}</th>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default text-right">PRUs</th>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default text-right">PRU Cost</th>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default text-right">AICs</th>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default text-right">AIC Cost</th>
+                <th className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-[0.05em] uppercase font-semibold text-fg-muted bg-bg-default text-right">Difference</th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr:last-child>td]:border-b-0">
+              {(activeTable === 'users' ? userRows : modelRows).map((row) => {
+                const diff = calculateSavingsDifference(row.totals.netAmount, row.totals.aicNetAmount)
+                return (
+                  <tr key={row.label}>
+                    <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap font-semibold text-fg-default">{row.label}</td>
+                    <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-right tabular-nums">{row.totals.requests.toLocaleString()}</td>
+                    <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-right tabular-nums">{formatUsd(row.totals.netAmount)}</td>
+                    <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-right tabular-nums">{formatAic(row.totals.aicQuantity)}</td>
+                    <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap text-right tabular-nums">{formatUsd(row.totals.aicNetAmount)}</td>
+                    <td className={`px-4 py-3 border-b border-bg-muted whitespace-nowrap text-right tabular-nums${diff > 0 ? ' text-app-savings-fg font-semibold' : diff < 0 ? ' text-fg-danger font-semibold' : ''}`}>
+                      {formatDifference(diff)}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

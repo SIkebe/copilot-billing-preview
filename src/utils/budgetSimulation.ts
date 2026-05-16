@@ -2,7 +2,6 @@ import { calculateAicIncludedCreditsContext, getUsageMonthKey, type AicIncludedC
 import { getAicUsageMetrics, getUsageMetrics, parseNormalizedTokenUsageRecord, parseTokenUsageHeader, type TokenUsageHeader, type TokenUsageRecord } from '../pipeline/parser'
 import { getProductBudgetName, isNonCopilotCodeReviewUsage, NON_COPILOT_CODE_REVIEW_USER_LABEL, type ProductBudgetName } from '../pipeline/productClassification'
 import { streamLines } from '../pipeline/streamer'
-import type { UserSpendSegmentId } from './userSpendSegments'
 
 export type BudgetSimulationResult = {
   totalBill: number
@@ -19,8 +18,6 @@ export type BudgetSimulationResult = {
 export type BudgetSimulationOptions = {
   accountBudgetUsd?: number
   userBudgetUsd?: number
-  userBudgetUsdBySpendSegment?: Partial<Record<UserSpendSegmentId, number>>
-  userSpendSegmentsByUsername?: Record<string, UserSpendSegmentId>
   productBudgetsUsd?: Partial<Record<ProductBudgetName, number>>
 }
 
@@ -28,8 +25,6 @@ type BudgetSimulationContext = Pick<AicIncludedCreditsContext, 'reportPlanScope'
 type BudgetSimulationState = {
   remainingAccountBudget: number
   userBudgetCap: number
-  userBudgetCapBySpendSegment: Map<UserSpendSegmentId, number>
-  userSpendSegmentsByUsername: Map<string, UserSpendSegmentId>
   remainingProductBudgetByName: Map<ProductBudgetName, number>
   remainingOrganizationIncludedCredits: number
   totalBill: number
@@ -48,16 +43,6 @@ type BudgetSimulationState = {
 function normalizeBudget(value: number | undefined): number {
   if (value === undefined || !Number.isFinite(value)) return Number.POSITIVE_INFINITY
   return Math.max(value, 0)
-}
-
-function createSpendSegmentBudgetCaps(
-  budgets: Partial<Record<UserSpendSegmentId, number>> | undefined,
-): Map<UserSpendSegmentId, number> {
-  return new Map<UserSpendSegmentId, number>(
-    Object.entries(budgets ?? {})
-      .filter((entry): entry is [UserSpendSegmentId, number] => entry[1] !== undefined && Number.isFinite(entry[1]))
-      .map(([segment, amount]) => [segment, normalizeBudget(amount)]),
-  )
 }
 
 function getMaxQuantityByAdditionalSpendBudget(
@@ -103,8 +88,6 @@ function createBudgetSimulationState(
   return {
     remainingAccountBudget: normalizeBudget(options.accountBudgetUsd),
     userBudgetCap: normalizeBudget(options.userBudgetUsd),
-    userBudgetCapBySpendSegment: createSpendSegmentBudgetCaps(options.userBudgetUsdBySpendSegment),
-    userSpendSegmentsByUsername: new Map<string, UserSpendSegmentId>(Object.entries(options.userSpendSegmentsByUsername ?? {})),
     remainingProductBudgetByName: new Map<ProductBudgetName, number>(Object.entries(options.productBudgetsUsd ?? {})
       .map(([name, amount]) => [name as ProductBudgetName, normalizeBudget(amount)])),
     remainingOrganizationIncludedCredits: context.organizationIncludedCreditsPool,
@@ -120,19 +103,6 @@ function createBudgetSimulationState(
     remainingMonthlyIncludedCredits: new Map<string, number>(),
     seenIndividualIncludedCreditKeys: new Set<string>(),
   }
-}
-
-function getUserBudgetCap(state: BudgetSimulationState, budgetSubject: string | null): number {
-  if (!budgetSubject) {
-    return Number.POSITIVE_INFINITY
-  }
-
-  const segment = state.userSpendSegmentsByUsername.get(budgetSubject)
-  if (!segment) {
-    return state.userBudgetCap
-  }
-
-  return state.userBudgetCapBySpendSegment.get(segment) ?? state.userBudgetCap
 }
 
 function getRemainingIncludedCredits(
@@ -199,10 +169,9 @@ function simulateBudgetRecord(
       }
     }
 
-    const userBudgetCap = getUserBudgetCap(state, budgetSubject)
-    const remainingUserBudget = userBudgetCap === Number.POSITIVE_INFINITY
+    const remainingUserBudget = state.userBudgetCap === Number.POSITIVE_INFINITY
       ? Number.POSITIVE_INFINITY
-      : (budgetSubject ? (state.remainingUserBudgetByUser.get(budgetSubject) ?? userBudgetCap) : Number.POSITIVE_INFINITY)
+      : (budgetSubject ? (state.remainingUserBudgetByUser.get(budgetSubject) ?? state.userBudgetCap) : Number.POSITIVE_INFINITY)
     const remainingProductBudget = state.remainingProductBudgetByName.get(productBudgetName) ?? Number.POSITIVE_INFINITY
     const remainingIncludedCredits = getRemainingIncludedCredits(
       record,

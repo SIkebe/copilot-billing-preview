@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { InfoTip } from './InfoTip'
-import { th, thNum, td, tdNum } from './ui/tableStyles'
 import { formatAic, formatDifference, formatUsd } from '../utils/format'
 
 export type ProductUsageTableTotals = {
@@ -69,12 +68,12 @@ export function ProductUsageTable({ products, title }: ProductUsageTableProps) {
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr>
-            <th className={th}>Product</th>
-            <th className={thNum}>PRUs</th>
-            <th className={thNum}>PRU net cost</th>
-            <th className={thNum}>AICs</th>
-            <th className={thNum}>AIC net cost</th>
-            <th className={thNum}>Difference</th>
+            <th className="text-left px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">Product</th>
+            <th className="text-right px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">PRUs</th>
+            <th className="text-right px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">PRU net cost</th>
+            <th className="text-right px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">AICs</th>
+            <th className="text-right px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">AIC net cost</th>
+            <th className="text-right px-4 py-3 border-b border-bg-muted whitespace-nowrap text-[11px] tracking-wide uppercase font-semibold text-fg-muted bg-bg-default">Difference</th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +108,7 @@ function ProductRows({ product, productIndex, isExpanded, modelRows, onToggle }:
   return (
     <>
       <tr className="hover:[&_td]:bg-bg-default">
-        <td className={td}>
+        <td className="px-4 py-3 border-b border-bg-muted whitespace-nowrap">
           <span className="inline-flex items-center gap-0.5">
             <button
               type="button"
@@ -131,12 +130,12 @@ function ProductRows({ product, productIndex, isExpanded, modelRows, onToggle }:
             )}
           </span>
         </td>
-        <td className={tdNum}>{formatInt(product.totals.requests)}</td>
-        <td className={tdNum}>{formatUsd(product.totals.netAmount)}</td>
-        <td className={tdNum}>{formatAic(product.totals.aicQuantity)}</td>
-        <td className={tdNum}>{formatUsd(product.totals.aicNetAmount)}</td>
+        <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap">{formatInt(product.totals.requests)}</td>
+        <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap">{formatUsd(product.totals.netAmount)}</td>
+        <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap">{formatAic(product.totals.aicQuantity)}</td>
+        <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap">{formatUsd(product.totals.aicNetAmount)}</td>
         <td
-          className={`${tdNum} font-semibold ${productDiff > 0 ? 'text-app-savings-fg' : productDiff < 0 ? 'text-fg-danger' : 'text-fg-muted'}`}
+          className={`text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap font-semibold ${productDiff > 0 ? 'text-app-savings-fg' : productDiff < 0 ? 'text-fg-danger' : 'text-fg-muted'}`}
         >
           {formatDifference(productDiff)}
         </td>
@@ -149,12 +148,12 @@ function ProductRows({ product, productIndex, isExpanded, modelRows, onToggle }:
           return (
             <tr key={`${product.product}-${row.model}`} className="[&_td]:bg-bg-default">
               <td className="pl-11 pr-4 py-3 border-b border-bg-muted whitespace-nowrap text-xs text-fg-muted">{row.model}</td>
-              <td className={`${tdNum} text-fg-muted`}>{formatInt(row.totals.requests)}</td>
-              <td className={`${tdNum} text-fg-muted`}>{formatUsd(row.totals.netAmount)}</td>
-              <td className={`${tdNum} text-fg-muted`}>{formatAic(row.totals.aicQuantity)}</td>
-              <td className={`${tdNum} text-fg-muted`}>{formatUsd(row.totals.aicNetAmount)}</td>
+              <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap text-fg-muted">{formatInt(row.totals.requests)}</td>
+              <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap text-fg-muted">{formatUsd(row.totals.netAmount)}</td>
+              <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap text-fg-muted">{formatAic(row.totals.aicQuantity)}</td>
+              <td className="text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap text-fg-muted">{formatUsd(row.totals.aicNetAmount)}</td>
               <td
-                className={`${tdNum} font-semibold ${modelDiff > 0 ? 'text-app-savings-fg' : modelDiff < 0 ? 'text-fg-danger' : 'text-fg-muted'}`}
+                className={`text-right tabular-nums px-4 py-3 border-b border-bg-muted whitespace-nowrap font-semibold ${modelDiff > 0 ? 'text-app-savings-fg' : modelDiff < 0 ? 'text-fg-danger' : 'text-fg-muted'}`}
               >
                 {formatDifference(modelDiff)}
               </td>
