@@ -10,25 +10,6 @@ const HEADER = [
   'gross_amount',
   'discount_amount',
   'net_amount',
-  'total_monthly_quota',
-  'organization',
-  'cost_center_name',
-  'aic_quantity',
-  'aic_gross_amount',
-]
-
-const HEADER_WITH_EXCEEDS_QUOTA = [
-  'date',
-  'username',
-  'product',
-  'sku',
-  'model',
-  'quantity',
-  'unit_type',
-  'applied_cost_per_quantity',
-  'gross_amount',
-  'discount_amount',
-  'net_amount',
   'exceeds_quota',
   'total_monthly_quota',
   'organization',
@@ -69,7 +50,8 @@ const SAMPLE_ROW_2 = [
   '0',
   '0',
   '0',
-  '1000',
+  'FALSE',
+  '0',
   'octodemo',
   'Octocats',
   '24.9364',
@@ -88,7 +70,8 @@ const SAMPLE_ROW_3 = [
   '0',
   '0',
   '0',
-  '1000',
+  'FALSE',
+  '0',
   '',
   '',
   '59.167109999999994',
@@ -123,12 +106,22 @@ const SAMPLE_ROW_2_ANNOTATIONS: { index: number; label: string; note: string }[]
     note: '$0 — there is no PRU cost to discount.',
   },
   {
-    index: 14,
+    index: 11,
+    label: 'exceeds_quota',
+    note: 'FALSE — Base Model requests are not billable in PRU terms, so this defaults to FALSE.',
+  },
+  {
+    index: 12,
+    label: 'total_monthly_quota',
+    note: '0 PRUs — monthly quota is not applicable to Base Model requests, so it defaults to zero.',
+  },
+  {
+    index: 15,
     label: 'aic_quantity',
     note: '≈ 24.9 AICs consumed. Under usage-based billing, even Base Models consume AI Credits proportional to actual token usage.',
   },
   {
-    index: 15,
+    index: 16,
     label: 'aic_gross_amount',
     note: '≈ $0.249 (24.9 AICs × $0.01). This is what the same usage would cost under usage-based billing.',
   },
@@ -161,12 +154,22 @@ const SAMPLE_ROW_3_ANNOTATIONS: { index: number; label: string; note: string }[]
     note: '$0 gross PRU cost (0 PRUs × $0.04).',
   },
   {
-    index: 14,
+    index: 11,
+    label: 'exceeds_quota',
+    note: 'FALSE — Subagent usage is not billable in PRU terms, so it defaults to FALSE.',
+  },
+  {
+    index: 12,
+    label: 'total_monthly_quota',
+    note: '0 PRUs — monthly quota is not applicable to Subagent calls, so it defaults to zero.',
+  },
+  {
+    index: 15,
     label: 'aic_quantity',
     note: '≈ 59.2 AICs consumed. Under usage-based billing, subagents consume AI Credits based on actual usage.',
   },
   {
-    index: 15,
+    index: 16,
     label: 'aic_gross_amount',
     note: '≈ $0.592 (59.2 AICs × $0.01). This is the AI Credits cost for the subagent work.',
   },
@@ -211,7 +214,7 @@ const SAMPLE_ROW_1_ANNOTATIONS: { index: number; label: string; note: string }[]
   {
     index: 11,
     label: 'exceeds_quota',
-    note: 'FALSE — tracked for requests that are billable in PRU terms. TRUE means the user used up their included number of Premium Requests; FALSE means they stayed within the included allowance.',
+    note: 'FALSE — tracked for requests that are billable in PRU terms. TRUE means the user used up their included number of Premium Requests; FALSE means they stayed within the included allowance. For non-billable events like Base Model and Subagent calls, this value defaults to FALSE.',
   },
   { index: 12, label: 'total_monthly_quota', note: '1,000 PRUs — the monthly PRU quota for this user\'s plan.' },
   { index: 13, label: 'organization', note: 'The GitHub organization slug: "octodemo".' },
@@ -289,7 +292,7 @@ export function ReportGuideView() {
           each).
         </p>
 
-        <AnnotatedRow header={HEADER_WITH_EXCEEDS_QUOTA} values={SAMPLE_ROW_1} annotations={SAMPLE_ROW_1_ANNOTATIONS} />
+        <AnnotatedRow header={HEADER} values={SAMPLE_ROW_1} annotations={SAMPLE_ROW_1_ANNOTATIONS} />
       </div>
 
       <div className="bg-bg-default border border-border-default rounded-lg px-6 pt-5 pb-6 mb-6">
