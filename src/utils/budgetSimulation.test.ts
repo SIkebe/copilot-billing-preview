@@ -462,11 +462,13 @@ describe('runBudgetSimulation', () => {
       blockedUsers: 0,
       blockedRequests: 0,
       blockedIncludedCreditsAic: 0,
+      allowedAicQuantity: 2000,
       budgetExhausted: false,
       firstUserBlockedDate: null,
       accountBlockedDate: null,
       productBlockedDates: {},
       adjustedDailyNetCostByDate: [{ date: '2026-06-01', amount: 1 }],
+      adjustedDailyGrossCostByDate: [{ date: '2026-06-01', amount: 20 }],
     })
   })
 
